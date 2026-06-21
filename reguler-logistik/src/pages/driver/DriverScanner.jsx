@@ -9,6 +9,7 @@ const DriverScanner = () => {
   const { updateShipment } = useContext(AppContext);
   const [localShipmentId, setLocalShipmentId] = useState(shipmentId || null);
   const [scanModeStatus, setScanModeStatus] = useState('Pickup');
+  const [scanMethod, setScanMethod] = useState('camera'); // 'usb' or 'camera'
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [photoCaptured, setPhotoCaptured] = useState(false);
@@ -37,6 +38,60 @@ const DriverScanner = () => {
 
     return () => window.removeEventListener('resize', resizeCanvas);
   }, []);
+
+  // Camera Scanner Logic
+  useEffect(() => {
+    let scanner = null;
+    if (!localShipmentId && scanMethod === 'camera') {
+      if (window.Html5QrcodeScanner) {
+        scanner = new window.Html5QrcodeScanner("driver-reader", { 
+          fps: 10, 
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0
+        }, false);
+        
+        scanner.render(
+          (decodedText) => {
+            const audio = new Audio('https://www.soundjay.com/buttons/sounds/button-09.mp3');
+            audio.play().catch(e => console.log('Audio play failed', e));
+            
+            processScannedBarcode(decodedText);
+            
+            if (scanner) {
+              scanner.pause(true);
+              setTimeout(() => {
+                if (scanner) scanner.resume();
+              }, 2000);
+            }
+          },
+          (error) => {} // ignore
+        );
+      }
+    }
+    
+    return () => {
+      if (scanner) {
+        scanner.clear().catch(e => console.error("Failed to clear scanner", e));
+      }
+    };
+  }, [localShipmentId, scanMethod, scanModeStatus, updateShipment]);
+
+  const processScannedBarcode = (barcode) => {
+    if (!barcode) return;
+
+    if (scanModeStatus === 'Pickup' || scanModeStatus === 'Inbound' || scanModeStatus === 'Outbound') {
+       let targetStatus = 'Picked Up';
+       if(scanModeStatus === 'Inbound') targetStatus = 'Inbound';
+       if(scanModeStatus === 'Outbound') targetStatus = 'In-Transit';
+       
+       updateShipment(barcode, { status: targetStatus });
+       alert(`Resi ${barcode} diperbarui menjadi ${targetStatus}`);
+    } else {
+       // Proceed to form for Onhold / Delivered
+       setLocalShipmentId(barcode);
+       setDeliveryStatus(scanModeStatus === 'Onhold' ? 'Delayed' : 'Delivered');
+    }
+  };
 
   const getPos = (e) => {
     const canvas = canvasRef.current;
@@ -91,20 +146,8 @@ const DriverScanner = () => {
     e.preventDefault();
     const barcode = e.target.barcode.value.trim();
     if (!barcode) return;
-
-    if (scanModeStatus === 'Pickup' || scanModeStatus === 'Inbound' || scanModeStatus === 'Outbound') {
-       let targetStatus = 'Picked Up';
-       if(scanModeStatus === 'Inbound') targetStatus = 'Inbound';
-       if(scanModeStatus === 'Outbound') targetStatus = 'In-Transit';
-       
-       updateShipment(barcode, { status: targetStatus });
-       alert(`Resi ${barcode} diperbarui menjadi ${targetStatus}`);
-       e.target.reset();
-    } else {
-       // Proceed to form for Onhold / Delivered
-       setLocalShipmentId(barcode);
-       setDeliveryStatus(scanModeStatus === 'Onhold' ? 'Delayed' : 'Delivered');
-    }
+    processScannedBarcode(barcode);
+    e.target.reset();
   };
 
   const handleCameraClick = () => {
@@ -154,21 +197,48 @@ const DriverScanner = () => {
             </div>
 
             <div className="bg-white p-6 rounded-xl border border-outline-variant shadow-sm text-center">
-              <span className="material-symbols-outlined text-[64px] text-primary mb-4">qr_code_scanner</span>
-              <p className="font-body-md text-on-surface-variant mb-6">Arahkan kamera ke barcode resi atau masukkan nomor resi secara manual untuk update status ke <strong>{scanModeStatus}</strong>.</p>
               
-              <form onSubmit={handleScanSubmit} className="flex gap-2">
-                <input 
-                  type="text" 
-                  name="barcode"
-                  placeholder="Masukkan Nomor Resi..." 
-                  className="flex-1 px-4 py-3 bg-surface border border-outline-variant rounded-lg focus:border-primary outline-none"
-                  autoFocus
-                />
-                <button type="submit" className="bg-primary text-white px-6 py-3 rounded-lg font-label-md hover:bg-primary-container hover:text-primary transition-colors">
-                  SCAN
+              <div className="flex bg-surface-container-low rounded-lg p-1 mb-6">
+                <button 
+                  onClick={() => setScanMethod('camera')}
+                  className={`flex-1 py-2 rounded-md font-label-md transition-all flex items-center justify-center gap-2 ${scanMethod === 'camera' ? 'bg-white shadow-sm text-primary' : 'text-on-surface-variant'}`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">photo_camera</span>
+                  Kamera
                 </button>
-              </form>
+                <button 
+                  onClick={() => setScanMethod('usb')}
+                  className={`flex-1 py-2 rounded-md font-label-md transition-all flex items-center justify-center gap-2 ${scanMethod === 'usb' ? 'bg-white shadow-sm text-primary' : 'text-on-surface-variant'}`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">keyboard</span>
+                  Manual
+                </button>
+              </div>
+
+              {scanMethod === 'camera' ? (
+                <div className="mb-4 overflow-hidden rounded-xl border-2 border-outline-variant bg-surface-container-lowest">
+                  <div id="driver-reader" className="w-full"></div>
+                  <p className="font-label-md text-on-surface-variant mt-2 pb-2">Arahkan kamera ke barcode resi</p>
+                </div>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-[64px] text-primary mb-4">qr_code_scanner</span>
+                  <p className="font-body-md text-on-surface-variant mb-6">Masukkan nomor resi secara manual untuk update status ke <strong>{scanModeStatus}</strong>.</p>
+                  
+                  <form onSubmit={handleScanSubmit} className="flex gap-2">
+                    <input 
+                      type="text" 
+                      name="barcode"
+                      placeholder="Masukkan Nomor Resi..." 
+                      className="flex-1 px-4 py-3 bg-surface border border-outline-variant rounded-lg focus:border-primary outline-none"
+                      autoFocus
+                    />
+                    <button type="submit" className="bg-primary text-white px-6 py-3 rounded-lg font-label-md hover:bg-primary-container hover:text-primary transition-colors">
+                      UPDATE
+                    </button>
+                  </form>
+                </>
+              )}
             </div>
           </div>
         ) : (
