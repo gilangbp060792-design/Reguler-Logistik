@@ -12,11 +12,18 @@ const INITIAL_SHIPMENTS = [
   { id: 'RL-43210', origin: 'Makassar, ID', destination: 'Manado, ID', status: 'Pending', driverId: null, priority: 'Standard', notes: 'Awaiting driver assignment', createdAt: '2024-12-18T11:00:00', eta: '-', customer: 'PT Sulawesi Cargo' },
   { id: 'RL-32109', origin: 'Bali, ID', destination: 'Surabaya, ID', status: 'In-Transit', driverId: 'DRV-001', priority: 'Express', notes: '', createdAt: '2024-12-18T05:00:00', eta: '15:00', customer: 'Bali Shipping Co' },
   { id: 'RL-21098', origin: 'Jakarta, ID', destination: 'Cirebon, ID', status: 'Delivered', driverId: 'DRV-002', priority: 'Standard', notes: '', createdAt: '2024-12-15T08:00:00', eta: '14:00', customer: 'PT Pantura Jaya' },
+  // Dummy Data for Monthly Billing Test (May 2026)
+  { id: 'RL-MAY01', origin: 'Jakarta, ID', destination: 'Bandung, ID', status: 'Delivered', driverId: 'DRV-001', priority: 'Standard', notes: '', createdAt: '2026-05-02T10:00:00', totalBiaya: 1500000, customer: 'PT Dummy Sejahtera' },
+  { id: 'RL-MAY02', origin: 'Jakarta, ID', destination: 'Surabaya, ID', status: 'Delivered', driverId: 'DRV-002', priority: 'Express', notes: '', createdAt: '2026-05-10T14:30:00', totalBiaya: 2500000, customer: 'PT Dummy Sejahtera' },
+  { id: 'RL-MAY03', origin: 'Jakarta, ID', destination: 'Semarang, ID', status: 'Delivered', driverId: 'DRV-003', priority: 'Standard', notes: '', createdAt: '2026-05-15T09:15:00', totalBiaya: 1200000, customer: 'PT Dummy Sejahtera' },
+  { id: 'RL-MAY04', origin: 'Jakarta, ID', destination: 'Malang, ID', status: 'Delivered', driverId: 'DRV-004', priority: 'Standard', notes: '', createdAt: '2026-05-22T11:00:00', totalBiaya: 1800000, customer: 'PT Dummy Sejahtera' },
+  { id: 'RL-MAY05', origin: 'Jakarta, ID', destination: 'Bali, ID', status: 'Delivered', driverId: 'DRV-005', priority: 'Express', notes: '', createdAt: '2026-05-28T16:45:00', totalBiaya: 3000000, customer: 'PT Dummy Sejahtera' },
 ];
 
 const INITIAL_CUSTOMERS = [
   { id: 'CUST-001', name: 'PT Maju Bersama', pic: 'Budi Santoso', phone: '081234567890', email: 'budi@majubersama.com', city: 'Jakarta', province: 'DKI Jakarta', district: 'Kebayoran Baru', zip: '12190', npwp: '01.234.567.8-000.000', term: 'Cash', limit: '0', address: 'Jl. Sudirman No. 123' },
   { id: 'CUST-002', name: 'Toko Sumber Rejeki', pic: 'Siti Aminah', phone: '089876543210', email: 'siti@sumberrejeki.com', city: 'Surabaya', province: 'Jawa Timur', district: 'Gubeng', zip: '60281', npwp: '02.345.678.9-111.000', term: 'Net 30', limit: '15000000', address: 'Jl. Pemuda No. 45' },
+  { id: 'CUST-003', name: 'PT Dummy Sejahtera', pic: 'Andi Dummy', phone: '08111222333', email: 'andi@dummy.com', city: 'Jakarta', province: 'DKI Jakarta', district: 'Setiabudi', zip: '12920', npwp: '03.456.789.0-222.000', term: 'Net 30', limit: '50000000', address: 'Jl. HR Rasuna Said Kav. 1' },
 ];
 
 const INITIAL_FLEET = [
@@ -51,7 +58,14 @@ export const AppProvider = ({ children }) => {
 
   const [shipments, setShipments] = useState(() => {
     const saved = localStorage.getItem('rl_shipments');
-    return saved ? JSON.parse(saved) : INITIAL_SHIPMENTS;
+    let parsed = saved ? JSON.parse(saved) : INITIAL_SHIPMENTS;
+    // Force inject dummy data if missing
+    if (!parsed.some(s => s.customer === 'PT Dummy Sejahtera')) {
+      const dummies = INITIAL_SHIPMENTS.filter(s => s.customer === 'PT Dummy Sejahtera');
+      parsed = [...parsed, ...dummies];
+      localStorage.setItem('rl_shipments', JSON.stringify(parsed));
+    }
+    return parsed;
   });
 
   const [fleet, setFleet] = useState(() => {
@@ -71,7 +85,14 @@ export const AppProvider = ({ children }) => {
 
   const [customers, setCustomers] = useState(() => {
     const saved = localStorage.getItem('rl_customers');
-    return saved ? JSON.parse(saved) : INITIAL_CUSTOMERS;
+    let parsed = saved ? JSON.parse(saved) : INITIAL_CUSTOMERS;
+    // Force inject dummy customer if missing
+    if (!parsed.some(c => c.name === 'PT Dummy Sejahtera')) {
+      const dummyCust = INITIAL_CUSTOMERS.filter(c => c.name === 'PT Dummy Sejahtera');
+      parsed = [...parsed, ...dummyCust];
+      localStorage.setItem('rl_customers', JSON.stringify(parsed));
+    }
+    return parsed;
   });
 
   const [settings, setSettings] = useState(() => {
@@ -79,12 +100,16 @@ export const AppProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : {
       companyName: 'Reguler Logistik',
       companyAddress: 'Jl. Sudirman No. 123, Jakarta Selatan, 12190',
+      companyPhone: '021-12345678',
       timezone: 'Asia/Jakarta',
       language: 'id',
       emailNotif: true,
       pushNotif: true,
       smsNotif: false,
       appLogo: null,
+      bankName: 'Bank Mandiri',
+      bankAccount: '123-00-4567890-1',
+      bankAccountName: 'PT. REGULER LOGISTIK',
     };
   });
 

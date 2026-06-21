@@ -23,6 +23,7 @@ const DriverLogin = () => {
 
     if (driver) {
       setLoading(true);
+      localStorage.setItem('rl_driver_id', driver.id);
       setTimeout(() => {
         setSuccess(true);
         setTimeout(() => {

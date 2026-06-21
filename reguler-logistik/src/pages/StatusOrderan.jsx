@@ -2,11 +2,14 @@ import React, { useState, useContext, useRef, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 
 const StatusOrderan = () => {
-  const { shipments, updateShipment } = useContext(AppContext);
+  const { shipments, drivers, updateShipment } = useContext(AppContext);
   const [activeTab, setActiveTab] = useState('Pickup');
   const [scanMode, setScanMode] = useState('usb'); // 'usb' or 'camera'
   const [scanInput, setScanInput] = useState('');
   const [recentScans, setRecentScans] = useState([]);
+  const [pendingHoldScan, setPendingHoldScan] = useState(null);
+  const [holdReason, setHoldReason] = useState('');
+  const [photoCaptured, setPhotoCaptured] = useState(false);
   const inputRef = useRef(null);
 
   const tabs = [
@@ -74,6 +77,15 @@ const StatusOrderan = () => {
     const shipment = shipments.find(s => s.id.toLowerCase() === barcode.toLowerCase());
     
     if (shipment) {
+      if (currentTab.id === 'Onhold') {
+        // Intercept for Onhold to ask for reason and photo
+        setPendingHoldScan(shipment);
+        return;
+      }
+
+      const driver = drivers.find(d => d.id === shipment.driverId);
+      const driverName = driver ? driver.name : 'Admin/Gudang';
+
       // Update status
       updateShipment(shipment.id, { status: currentTab.statusTarget });
       
@@ -82,6 +94,7 @@ const StatusOrderan = () => {
         { 
           id: shipment.id, 
           customer: shipment.customer, 
+          driverName: driverName,
           time: new Date().toLocaleTimeString(),
           success: true,
           message: `Status diperbarui menjadi ${currentTab.label}`
@@ -100,6 +113,37 @@ const StatusOrderan = () => {
         ...prev
       ].slice(0, 50));
     }
+  };
+
+  const handleHoldSubmit = (e) => {
+    e.preventDefault();
+    if (pendingHoldScan) {
+      const driver = drivers.find(d => d.id === pendingHoldScan.driverId);
+      const driverName = driver ? driver.name : 'Admin/Gudang';
+
+      updateShipment(pendingHoldScan.id, { 
+        status: 'Onhold', 
+        holdReason, 
+        holdPhoto: photoCaptured ? 'captured.jpg' : null 
+      });
+      
+      setRecentScans(prev => [
+        { 
+          id: pendingHoldScan.id, 
+          customer: pendingHoldScan.customer, 
+          driverName: driverName,
+          time: new Date().toLocaleTimeString(),
+          success: true,
+          message: `Status diperbarui menjadi Onhold (Alasan: ${holdReason})`
+        },
+        ...prev
+      ].slice(0, 50));
+    }
+    
+    setPendingHoldScan(null);
+    setHoldReason('');
+    setPhotoCaptured(false);
+    if (scanMode === 'usb' && inputRef.current) inputRef.current.focus();
   };
 
   const handleScan = (e) => {
@@ -257,6 +301,12 @@ const StatusOrderan = () => {
                         {scan.success && scan.customer && <span style={{ fontWeight: 600 }}>{scan.customer} - </span>}
                         {scan.message}
                       </div>
+                      {scan.driverName && (
+                        <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>person</span>
+                          Diperbarui oleh: <strong>{scan.driverName}</strong>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -264,8 +314,73 @@ const StatusOrderan = () => {
             )}
           </div>
         </div>
-
       </div>
+
+      {/* On Hold Modal */}
+      {pendingHoldScan && (
+        <div className="modal-overlay" onClick={() => setPendingHoldScan(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', padding: '32px' }}>
+            <h3 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--error)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <span className="material-symbols-outlined">warning</span>
+              Laporan On Hold / Kendala
+            </h3>
+            <p style={{ marginBottom: '24px', color: 'var(--on-surface-variant)', fontSize: '14px' }}>
+              Resi: <strong style={{ color: 'var(--on-surface)' }}>{pendingHoldScan.id}</strong>
+            </p>
+            
+            <form onSubmit={handleHoldSubmit}>
+              <div className="form-group" style={{ marginBottom: '20px' }}>
+                <label className="form-label" style={{ fontWeight: 700, fontSize: '12px' }}>ALASAN KENDALA</label>
+                <textarea 
+                  className="form-control" 
+                  rows="3" 
+                  placeholder="Misal: Penerima menolak, Alamat tidak lengkap, Paket rusak..."
+                  value={holdReason}
+                  onChange={(e) => setHoldReason(e.target.value)}
+                  required
+                  style={{ borderRadius: '12px', padding: '16px' }}
+                ></textarea>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '32px' }}>
+                <label className="form-label" style={{ fontWeight: 700, fontSize: '12px' }}>BUKTI FOTO</label>
+                <div 
+                  onClick={() => setPhotoCaptured(true)}
+                  style={{
+                    height: '160px',
+                    borderRadius: '16px',
+                    border: photoCaptured ? '2px solid var(--primary)' : '2px dashed var(--outline-variant)',
+                    background: photoCaptured ? 'var(--primary-container)' : 'var(--surface-container-lowest)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    color: photoCaptured ? 'var(--on-primary-container)' : 'var(--on-surface-variant)'
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '48px', marginBottom: '8px' }}>
+                    {photoCaptured ? 'check_circle' : 'add_a_photo'}
+                  </span>
+                  <span style={{ fontSize: '14px', fontWeight: 600 }}>
+                    {photoCaptured ? 'Foto Tersimpan' : 'Klik untuk Ambil Foto Bukti'}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                <button type="button" className="btn btn-outline" onClick={() => setPendingHoldScan(null)} style={{ padding: '12px 24px' }}>Batal</button>
+                <button type="submit" className="btn btn-danger" style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="material-symbols-outlined">save</span>
+                  Simpan Status
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

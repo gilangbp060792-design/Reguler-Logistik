@@ -1,12 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { AppContext } from '../../context/AppContext';
 
 const DriverScanner = () => {
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const shipmentId = state?.shipmentId;
+  const { updateShipment } = useContext(AppContext);
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [photoCaptured, setPhotoCaptured] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [deliveryStatus, setDeliveryStatus] = useState('Delivered');
+  const [holdReason, setHoldReason] = useState('');
 
   // Canvas Signature Logic
   useEffect(() => {
@@ -69,6 +75,13 @@ const DriverScanner = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (shipmentId) {
+      updateShipment(shipmentId, {
+        status: deliveryStatus === 'Delivered' ? 'Delivered' : 'Onhold',
+        holdReason: deliveryStatus === 'Delivered' ? '' : holdReason,
+        holdPhoto: photoCaptured ? 'captured.jpg' : null
+      });
+    }
     setShowSuccess(true);
   };
 
@@ -99,7 +112,27 @@ const DriverScanner = () => {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto px-4 py-6 max-w-lg mx-auto w-full fade-in pb-24">
+      {/* Main Form Content */}
+      <main className="flex-1 bg-surface-container-lowest relative pb-24 px-container-margin pt-6 overflow-y-auto">
+        
+        {/* Shipment Info Banner */}
+        {shipmentId ? (
+          <div className="bg-primary-container text-on-primary-container px-4 py-3 mb-6 rounded-xl flex items-center justify-between shadow-sm border border-primary/20">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[20px]">package_2</span>
+              <span className="font-label-md text-label-md font-bold tracking-wider">RESI: {shipmentId}</span>
+            </div>
+            <span className="bg-primary text-on-primary px-2 py-0.5 rounded font-label-md text-[10px]">AKTIF</span>
+          </div>
+        ) : (
+          <div className="bg-surface-container text-on-surface-variant px-4 py-3 mb-6 rounded-xl flex items-center justify-between shadow-sm border border-outline-variant">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
+              <span className="font-label-md text-label-md font-bold tracking-wider">TIDAK ADA RESI TERPILIH</span>
+            </div>
+          </div>
+        )}
+
         {/* Shipment Brief */}
         <section className="mb-8 p-4 bg-surface-container-low rounded-xl border border-outline-variant">
           <div className="flex justify-between items-start mb-2">
@@ -122,20 +155,65 @@ const DriverScanner = () => {
 
         {/* POD Form */}
         <form className="space-y-8" onSubmit={handleSubmit}>
-          {/* Receiver Name */}
+          {/* Status Toggle */}
           <div className="space-y-2">
-            <label className="font-label-md text-label-md text-on-surface-variant flex items-center gap-2" htmlFor="receiver-name">
-              <span className="material-symbols-outlined text-[16px]">person</span>
-              NAMA PENERIMA
+            <label className="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px]">rule</span>
+              STATUS PENGIRIMAN
             </label>
-            <input 
-              className="w-full px-4 py-3 bg-white border border-outline rounded-lg font-body-lg focus:ring-0 focus:border-primary transition-all shadow-sm" 
-              id="receiver-name" 
-              placeholder="Masukkan nama lengkap" 
-              type="text" 
-              required
-            />
+            <div className="grid grid-cols-2 gap-3">
+              <div 
+                onClick={() => setDeliveryStatus('Delivered')}
+                className={`p-3 rounded-xl border-2 flex items-center gap-2 cursor-pointer transition-all ${deliveryStatus === 'Delivered' ? 'border-primary bg-primary-container text-on-primary-container' : 'border-outline-variant bg-surface'}`}
+              >
+                <span className="material-symbols-outlined">check_circle</span>
+                <span className="font-label-md font-bold">Berhasil Terkirim</span>
+              </div>
+              <div 
+                onClick={() => setDeliveryStatus('Delayed')}
+                className={`p-3 rounded-xl border-2 flex items-center gap-2 cursor-pointer transition-all ${deliveryStatus === 'Delayed' ? 'border-error bg-error-container text-on-error-container' : 'border-outline-variant bg-surface'}`}
+              >
+                <span className="material-symbols-outlined">pause_circle</span>
+                <span className="font-label-md font-bold">Gagal / On Hold</span>
+              </div>
+            </div>
           </div>
+
+          {/* Receiver Name */}
+          {deliveryStatus === 'Delivered' && (
+            <div className="space-y-2 animate-fade-in">
+              <label className="font-label-md text-label-md text-on-surface-variant flex items-center gap-2" htmlFor="receiver-name">
+                <span className="material-symbols-outlined text-[16px]">person</span>
+                NAMA PENERIMA
+              </label>
+              <input 
+                className="w-full px-4 py-3 bg-white border border-outline rounded-lg font-body-lg focus:ring-0 focus:border-primary transition-all shadow-sm" 
+                id="receiver-name" 
+                placeholder="Masukkan nama lengkap" 
+                type="text" 
+                required
+              />
+            </div>
+          )}
+
+          {/* Hold Reason */}
+          {deliveryStatus === 'Delayed' && (
+            <div className="space-y-2 animate-fade-in">
+              <label className="font-label-md text-label-md text-on-surface-variant flex items-center gap-2" htmlFor="hold-reason">
+                <span className="material-symbols-outlined text-[16px]">error</span>
+                ALASAN ON HOLD
+              </label>
+              <textarea 
+                className="w-full px-4 py-3 bg-white border border-outline rounded-lg font-body-lg focus:ring-0 focus:border-primary transition-all shadow-sm" 
+                id="hold-reason" 
+                placeholder="Misal: Rumah kosong, pelanggan pindah, alamat tidak ditemukan" 
+                rows="3"
+                value={holdReason}
+                onChange={(e) => setHoldReason(e.target.value)}
+                required
+              ></textarea>
+            </div>
+          )}
 
           {/* Photo Attachment */}
           <div className="space-y-2">
@@ -162,41 +240,45 @@ const DriverScanner = () => {
           </div>
 
           {/* Digital Signature */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-end">
-              <label className="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
-                <span className="material-symbols-outlined text-[16px]">draw</span>
-                TANDA TANGAN DIGITAL
-              </label>
-              <button className="text-primary font-label-md hover:underline decoration-2 underline-offset-4" onClick={clearSignature} type="button">HAPUS</button>
-            </div>
-            <div className="relative bg-white border border-outline rounded-xl overflow-hidden shadow-sm">
-              <canvas 
-                ref={canvasRef}
-                className="signature-pad w-full h-40 touch-none"
-                onMouseDown={startDrawing}
-                onMouseMove={draw}
-                onMouseUp={stopDrawing}
-                onMouseLeave={stopDrawing}
-                onTouchStart={(e) => { e.preventDefault(); startDrawing(e); }}
-                onTouchMove={(e) => { e.preventDefault(); draw(e); }}
-                onTouchEnd={(e) => { e.preventDefault(); stopDrawing(); }}
-              ></canvas>
-              <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
-                <div className="w-3/4 h-px bg-outline-variant mx-auto mb-1"></div>
-                <span className="font-label-md text-[10px] text-outline tracking-widest uppercase">Tanda tangan di atas garis</span>
+          {deliveryStatus === 'Delivered' && (
+            <div className="space-y-2 animate-fade-in">
+              <div className="flex justify-between items-end">
+                <label className="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[16px]">draw</span>
+                  TANDA TANGAN DIGITAL
+                </label>
+                <button className="text-primary font-label-md hover:underline decoration-2 underline-offset-4" onClick={clearSignature} type="button">HAPUS</button>
+              </div>
+              <div className="relative bg-white border border-outline rounded-xl overflow-hidden shadow-sm">
+                <canvas 
+                  ref={canvasRef}
+                  className="signature-pad w-full h-40 touch-none"
+                  onMouseDown={startDrawing}
+                  onMouseMove={draw}
+                  onMouseUp={stopDrawing}
+                  onMouseLeave={stopDrawing}
+                  onTouchStart={(e) => { e.preventDefault(); startDrawing(e); }}
+                  onTouchMove={(e) => { e.preventDefault(); draw(e); }}
+                  onTouchEnd={(e) => { e.preventDefault(); stopDrawing(); }}
+                ></canvas>
+                <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
+                  <div className="w-3/4 h-px bg-outline-variant mx-auto mb-1"></div>
+                  <span className="font-label-md text-[10px] text-outline tracking-widest uppercase">Tanda tangan di atas garis</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Primary CTA */}
           <div className="pt-6">
-            <button className="w-full h-14 bg-secondary-container text-white font-headline-md rounded-xl shadow-lg flex items-center justify-center gap-3 active:scale-[0.98] transition-transform hover:bg-secondary active:opacity-90" type="submit">
-              <span className="material-symbols-outlined">verified</span>
-              Kirim Bukti (POD)
+            <button className={`w-full h-14 text-white font-headline-md rounded-xl shadow-lg flex items-center justify-center gap-3 active:scale-[0.98] transition-transform active:opacity-90 ${deliveryStatus === 'Delivered' ? 'bg-secondary-container hover:bg-secondary' : 'bg-error hover:bg-red-600'}`} type="submit">
+              <span className="material-symbols-outlined">{deliveryStatus === 'Delivered' ? 'verified' : 'report'}</span>
+              {deliveryStatus === 'Delivered' ? 'Kirim Bukti (POD)' : 'Laporkan On Hold'}
             </button>
             <p className="mt-4 text-center text-on-surface-variant font-label-md">
-              Dengan mengirim, Anda mengonfirmasi bahwa paket dikirim dalam kondisi baik.
+              {deliveryStatus === 'Delivered' 
+                ? 'Dengan mengirim, Anda mengonfirmasi bahwa paket dikirim dalam kondisi baik.'
+                : 'Dengan melaporkan On Hold, paket akan ditandai tertunda dan perlu diproses ulang.'}
             </p>
           </div>
         </form>

@@ -83,8 +83,9 @@ const Settings = () => {
               </div>
             </div>
             
-            <div className="form-group"><label className="form-label">Nama Perusahaan</label><input className="form-control" value={form.companyName} onChange={(e) => setForm({ ...form, companyName: e.target.value })} /></div>
-            <div className="form-group"><label className="form-label">Alamat Perusahaan</label><textarea className="form-control" rows="3" value={form.companyAddress} onChange={(e) => setForm({ ...form, companyAddress: e.target.value })} style={{ resize: 'vertical' }}></textarea></div>
+            <div className="form-group"><label className="form-label">Nama Perusahaan</label><input className="form-control" value={form.companyName || ''} onChange={(e) => setForm({ ...form, companyName: e.target.value })} /></div>
+            <div className="form-group"><label className="form-label">Telepon</label><input className="form-control" value={form.companyPhone || ''} onChange={(e) => setForm({ ...form, companyPhone: e.target.value })} /></div>
+            <div className="form-group"><label className="form-label">Alamat Perusahaan</label><textarea className="form-control" rows="3" value={form.companyAddress || ''} onChange={(e) => setForm({ ...form, companyAddress: e.target.value })} style={{ resize: 'vertical' }}></textarea></div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div className="form-group"><label className="form-label">Zona Waktu</label><select className="form-control" value={form.timezone} onChange={(e) => setForm({ ...form, timezone: e.target.value })}><option value="Asia/Jakarta">Asia/Jakarta (WIB)</option><option value="Asia/Makassar">Asia/Makassar (WITA)</option><option value="Asia/Jayapura">Asia/Jayapura (WIT)</option></select></div>
               <div className="form-group"><label className="form-label">Bahasa</label><select className="form-control" value={form.language} onChange={(e) => setForm({ ...form, language: e.target.value })}><option value="id">Bahasa Indonesia</option><option value="en">English</option></select></div>
@@ -94,6 +95,18 @@ const Settings = () => {
         </section>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <section className="card">
+            <h3 className="font-headline-md" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="material-symbols-outlined">account_balance</span>
+              Informasi Bank (Faktur)
+            </h3>
+            <form onSubmit={handleSave}>
+              <div className="form-group"><label className="form-label">Nama Bank</label><input className="form-control" value={form.bankName || ''} onChange={(e) => setForm({ ...form, bankName: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">No. Rekening</label><input className="form-control" value={form.bankAccount || ''} onChange={(e) => setForm({ ...form, bankAccount: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">Atas Nama</label><input className="form-control" value={form.bankAccountName || ''} onChange={(e) => setForm({ ...form, bankAccountName: e.target.value })} /></div>
+              <button type="submit" className="btn btn-primary" style={{ marginTop: '8px' }}><span className="material-symbols-outlined" style={{ fontSize: 16 }}>save</span>Simpan Rekening</button>
+            </form>
+          </section>
           <section className="card">
             <h3 className="font-headline-md" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span className="material-symbols-outlined">notifications</span>

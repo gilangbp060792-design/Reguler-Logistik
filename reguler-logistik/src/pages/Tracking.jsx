@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { AppContext } from '../context/AppContext';
 
 const Tracking = () => {
-  const { shipments } = useContext(AppContext);
+  const { shipments, drivers } = useContext(AppContext);
   const [search, setSearch] = useState('');
   const [history, setHistory] = useState([
     { id: 'RL-2023-11024', status: 'In-Transit', origin: 'Jakarta', destination: 'Surabaya', time: '2 Jam yang lalu', message: 'Tiba di Sortasi Bekasi' },
@@ -239,6 +239,12 @@ const Tracking = () => {
                         }}></div>
                         <div style={{ fontSize: '14px', fontWeight: 700, color: isActive ? '#0052cc' : '#0f172a', marginBottom: '2px' }}>{title}</div>
                         <div style={{ fontSize: '13px', color: '#64748b' }}>{desc}</div>
+                        {(isCompleted || isActive) && (
+                          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 12 }}>person</span>
+                            Diperbarui oleh: {drivers?.find(d => d.id === trackedShipment.driverId)?.name || 'Admin/Gudang'}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
