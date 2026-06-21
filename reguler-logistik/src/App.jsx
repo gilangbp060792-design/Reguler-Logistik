@@ -26,6 +26,11 @@ import DriverLogin from './pages/driver/DriverLogin';
 import DriverHome from './pages/driver/DriverHome';
 import DriverScanner from './pages/driver/DriverScanner';
 
+// Customer Portal
+import CustomerLayout from './pages/customer/CustomerLayout';
+import CustomerLogin from './pages/customer/CustomerLogin';
+import CustomerDashboard from './pages/customer/CustomerDashboard';
+
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useContext(AppContext);
   if (!isAuthenticated) {
@@ -50,6 +55,13 @@ const AppContent = () => {
           <Route path="login" element={<DriverLogin />} />
           <Route path="home" element={<DriverHome />} />
           <Route path="scanner" element={<DriverScanner />} />
+          <Route index element={<Navigate to="login" replace />} />
+        </Route>
+
+        {/* Customer Portal Routes */}
+        <Route path="/customer" element={<CustomerLayout />}>
+          <Route path="login" element={<CustomerLogin />} />
+          <Route path="dashboard" element={<CustomerDashboard />} />
           <Route index element={<Navigate to="login" replace />} />
         </Route>
         <Route path="/*" element={
