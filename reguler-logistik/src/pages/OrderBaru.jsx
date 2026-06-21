@@ -11,6 +11,123 @@ const generateResi = () => {
   return result;
 };
 
+const AddressForm = ({ data, setData, title, number, nameLabel, customers = [] }) => (
+  <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+    <div style={{ background: 'var(--primary)', color: 'white', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'white', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>{number}</div>
+      <span className="font-label-md" style={{ letterSpacing: '0.05em', fontSize: '13px' }}>{title}</span>
+    </div>
+    <div style={{ padding: '20px' }}>
+      <div className="form-group">
+        <label className="form-label">ISI CEPAT (DARI MASTER)</label>
+        <select 
+          className="form-control" 
+          style={{ color: 'var(--outline)' }}
+          onChange={(e) => {
+            const cust = customers.find(c => c.id === e.target.value);
+            if (cust) {
+              setData({
+                ...data,
+                name: cust.pic || '',
+                company: cust.name || '',
+                phone: cust.phone || '',
+                provinsi: cust.province || '',
+                kota: cust.city || '',
+                kecamatan: cust.district || '',
+                kodePos: cust.zip || '',
+                alamat: cust.address || ''
+              });
+            }
+          }}
+        >
+          <option value="">-- Pilih Customer dari Master --</option>
+          {customers.map(c => (
+            <option key={c.id} value={c.id}>{c.name} ({c.pic})</option>
+          ))}
+        </select>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div className="form-group">
+          <label className="form-label">{nameLabel || 'PENGIRIM / PIC'}</label>
+          <input className="form-control" value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} placeholder="" />
+        </div>
+        <div className="form-group">
+          <label className="form-label">TELEPON</label>
+          <input className="form-control" value={data.phone} onChange={(e) => setData({ ...data, phone: e.target.value })} placeholder="" />
+        </div>
+      </div>
+      <div className="form-group">
+        <label className="form-label">PERUSAHAAN (OPSIONAL)</label>
+        <input className="form-control" value={data.company} onChange={(e) => setData({ ...data, company: e.target.value })} placeholder="" />
+      </div>
+      
+      <div className="form-group" style={{ background: 'var(--surface-container-low)', padding: '16px', borderRadius: '12px', border: '1px solid var(--outline-variant)' }}>
+        <label className="form-label" style={{ color: 'var(--primary)', marginBottom: '12px' }}>CARI KECAMATAN / KELURAHAN (AUTO FILL)</label>
+        <RegionPicker 
+          onSelect={(region) => {
+            setData({
+              ...data,
+              provinsi: region.provinsi,
+              kota: region.kota,
+              kecamatan: region.kecamatan,
+              kodePos: region.kodePos
+            });
+          }}
+        />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div className="form-group">
+          <label className="form-label">PROVINSI</label>
+          <input className="form-control" value={data.provinsi} onChange={(e) => setData({ ...data, provinsi: e.target.value })} placeholder="" />
+        </div>
+        <div className="form-group">
+          <label className="form-label">KOTA</label>
+          <input className="form-control" value={data.kota} onChange={(e) => setData({ ...data, kota: e.target.value })} placeholder="" />
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div className="form-group">
+          <label className="form-label">KECAMATAN</label>
+          <input className="form-control" value={data.kecamatan} onChange={(e) => setData({ ...data, kecamatan: e.target.value })} placeholder="" />
+        </div>
+        <div className="form-group">
+          <label className="form-label">KODE POS</label>
+          <input className="form-control" value={data.kodePos} onChange={(e) => setData({ ...data, kodePos: e.target.value })} placeholder="" />
+        </div>
+      </div>
+      <div className="form-group" style={{ marginBottom: 0 }}>
+        <label className="form-label">ALAMAT LENGKAP</label>
+        <textarea className="form-control" value={data.alamat} onChange={(e) => setData({ ...data, alamat: e.target.value })} rows="3" style={{ resize: 'vertical' }}></textarea>
+      </div>
+    </div>
+  </div>
+);
+
+const LayananRow = ({ label, checked, fee, onToggle, onFeeChange }) => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--outline-variant)' }}>
+    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+      <input type="checkbox" checked={checked} onChange={onToggle} style={{ width: 16, height: 16, accentColor: 'var(--primary)', appearance: 'auto' }} />
+      <span className="font-body-md">{label}</span>
+    </label>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <span className="font-body-md" style={{ color: 'var(--on-surface-variant)' }}>Rp</span>
+      <input
+        type="number"
+        className="form-control"
+        style={{ width: '100px', padding: '6px 8px', textAlign: 'right', fontSize: '13px' }}
+        value={fee}
+        onChange={(e) => {
+          const val = e.target.value;
+          onFeeChange(val);
+          if (Number(val) > 0 && !checked) onToggle();
+          else if ((!val || Number(val) === 0) && checked) onToggle();
+        }}
+      />
+    </div>
+  </div>
+);
+
 const OrderBaru = () => {
   const { addShipment, drivers, customers, settings } = useContext(AppContext);
   const location = useLocation();
@@ -105,118 +222,7 @@ const OrderBaru = () => {
     });
   };
 
-  const AddressForm = ({ data, setData, title, number, nameLabel }) => (
-    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-      <div style={{ background: 'var(--primary)', color: 'white', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'white', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>{number}</div>
-        <span className="font-label-md" style={{ letterSpacing: '0.05em', fontSize: '13px' }}>{title}</span>
-      </div>
-      <div style={{ padding: '20px' }}>
-        <div className="form-group">
-          <label className="form-label">ISI CEPAT (DARI MASTER)</label>
-          <select 
-            className="form-control" 
-            style={{ color: 'var(--outline)' }}
-            onChange={(e) => {
-              const cust = customers.find(c => c.id === e.target.value);
-              if (cust) {
-                setData({
-                  ...data,
-                  name: cust.pic || '',
-                  company: cust.name || '',
-                  phone: cust.phone || '',
-                  provinsi: cust.province || '',
-                  kota: cust.city || '',
-                  kecamatan: cust.district || '',
-                  kodePos: cust.zip || '',
-                  alamat: cust.address || ''
-                });
-              }
-            }}
-          >
-            <option value="">-- Pilih Customer dari Master --</option>
-            {customers.map(c => (
-              <option key={c.id} value={c.id}>{c.name} ({c.pic})</option>
-            ))}
-          </select>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <div className="form-group">
-            <label className="form-label">{nameLabel || 'PENGIRIM / PIC'}</label>
-            <input className="form-control" value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} placeholder="" />
-          </div>
-          <div className="form-group">
-            <label className="form-label">TELEPON</label>
-            <input className="form-control" value={data.phone} onChange={(e) => setData({ ...data, phone: e.target.value })} placeholder="" />
-          </div>
-        </div>
-        <div className="form-group">
-          <label className="form-label">PERUSAHAAN (OPSIONAL)</label>
-          <input className="form-control" value={data.company} onChange={(e) => setData({ ...data, company: e.target.value })} placeholder="" />
-        </div>
-        
-        <div className="form-group" style={{ background: 'var(--surface-container-low)', padding: '16px', borderRadius: '12px', border: '1px solid var(--outline-variant)' }}>
-          <label className="form-label" style={{ color: 'var(--primary)', marginBottom: '12px' }}>CARI KECAMATAN / KELURAHAN (AUTO FILL)</label>
-          <RegionPicker 
-            onSelect={(region) => {
-              setData({
-                ...data,
-                provinsi: region.provinsi,
-                kota: region.kota,
-                kecamatan: region.kecamatan,
-                kodePos: region.kodePos
-              });
-            }}
-          />
-        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <div className="form-group">
-            <label className="form-label">PROVINSI</label>
-            <input className="form-control" value={data.provinsi} onChange={(e) => setData({ ...data, provinsi: e.target.value })} placeholder="" />
-          </div>
-          <div className="form-group">
-            <label className="form-label">KOTA</label>
-            <input className="form-control" value={data.kota} onChange={(e) => setData({ ...data, kota: e.target.value })} placeholder="" />
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <div className="form-group">
-            <label className="form-label">KECAMATAN</label>
-            <input className="form-control" value={data.kecamatan} onChange={(e) => setData({ ...data, kecamatan: e.target.value })} placeholder="" />
-          </div>
-          <div className="form-group">
-            <label className="form-label">KODE POS</label>
-            <input className="form-control" value={data.kodePos} onChange={(e) => setData({ ...data, kodePos: e.target.value })} placeholder="" />
-          </div>
-        </div>
-        <div className="form-group" style={{ marginBottom: 0 }}>
-          <label className="form-label">ALAMAT LENGKAP</label>
-          <textarea className="form-control" value={data.alamat} onChange={(e) => setData({ ...data, alamat: e.target.value })} rows="3" style={{ resize: 'vertical' }}></textarea>
-        </div>
-      </div>
-    </div>
-  );
-
-  const LayananRow = ({ label, checked, fee, onToggle, onFeeChange }) => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--outline-variant)' }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-        <input type="checkbox" checked={checked} onChange={onToggle} style={{ width: 16, height: 16, accentColor: 'var(--primary)' }} />
-        <span className="font-body-md">{label}</span>
-      </label>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <span className="font-body-md" style={{ color: 'var(--on-surface-variant)' }}>Rp</span>
-        <input
-          type="number"
-          className="form-control"
-          style={{ width: '100px', padding: '6px 8px', textAlign: 'right', fontSize: '13px' }}
-          value={fee}
-          onChange={(e) => onFeeChange(Number(e.target.value))}
-          disabled={!checked}
-        />
-      </div>
-    </div>
-  );
 
   const AwbPrintLayout = () => {
     const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
@@ -400,8 +406,8 @@ const OrderBaru = () => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', alignItems: 'start' }}>
         {/* Column 1: Pengirim + Penerima */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <AddressForm data={pengirim} setData={setPengirim} title="Informasi Pengirim" number="1" />
-          <AddressForm data={penerima} setData={setPenerima} title="Informasi Penerima" number="2" />
+          <AddressForm data={pengirim} setData={setPengirim} title="Informasi Pengirim" number="1" customers={customers} />
+          <AddressForm data={penerima} setData={setPenerima} title="Informasi Penerima" number="2" customers={customers} />
         </div>
 
         {/* Column 2: Barang + Layanan Tambahan */}

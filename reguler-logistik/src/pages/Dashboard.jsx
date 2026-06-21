@@ -6,6 +6,40 @@ const Dashboard = () => {
 
   const activeShipments = shipments.filter(s => ['In-Transit', 'Picked Up', 'Delayed', 'Pending'].includes(s.status)).slice(0, 5);
 
+  const handleExportCSV = () => {
+    const headers = ['No. Resi', 'Asal', 'Tujuan', 'Status', 'Pengemudi', 'ETA', 'Pelanggan', 'Prioritas'];
+    const csvRows = [];
+    csvRows.push(headers.join(','));
+    
+    activeShipments.forEach(s => {
+      const driver = s.driverId ? getDriverById(s.driverId) : null;
+      const driverName = driver ? driver.name : 'Belum Ditugaskan';
+      const statusIndo = statusLabel(s.status);
+      
+      const row = [
+        s.id,
+        `"${s.origin}"`,
+        `"${s.destination}"`,
+        `"${statusIndo}"`,
+        `"${driverName}"`,
+        `"${s.eta}"`,
+        `"${s.customer}"`,
+        `"${s.priority}"`
+      ];
+      csvRows.push(row.join(','));
+    });
+    
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `data_pengiriman_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const chartData = [
     { label: 'Sen', value: 60, count: 152 },
     { label: 'Sel', value: 40, count: 98 },
@@ -141,7 +175,7 @@ const Dashboard = () => {
             <p className="font-label-md" style={{ color: 'var(--on-surface-variant)' }}>Status real-time barang yang sedang dalam perjalanan.</p>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button className="btn btn-outline">Ekspor CSV</button>
+            <button className="btn btn-outline" onClick={handleExportCSV}>Ekspor CSV</button>
             <button className="btn btn-primary">Filter Pencarian</button>
           </div>
         </div>

@@ -10,6 +10,36 @@ const generateSTT = () => {
   return result;
 };
 
+const SectionHeader = ({ title }) => (
+  <div style={{ background: '#f8fafc', color: 'var(--primary)', padding: '12px 16px', fontWeight: 700, fontSize: '11px', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>
+    {title}
+  </div>
+);
+
+const FormRow = ({ label, value, onChange, placeholder, type = 'text' }) => (
+  <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+    <div style={{ width: '100px', fontSize: '12px', color: 'var(--on-surface)' }}>{label}</div>
+    <div style={{ marginRight: '12px', color: 'var(--on-surface-variant)' }}>:</div>
+    <input
+      type={type}
+      style={{
+        flex: 1,
+        border: 'none',
+        borderBottom: '1px solid var(--outline-variant)',
+        borderRadius: 0,
+        padding: '4px 0',
+        background: 'transparent',
+        fontSize: '13px',
+        color: 'var(--on-surface)',
+        outline: 'none'
+      }}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+    />
+  </div>
+);
+
 const STT = () => {
   const { settings } = useContext(AppContext);
   const location = useLocation();
@@ -38,17 +68,17 @@ const STT = () => {
     referensi: '',
     estPengiriman: prefillData?.eta || '',
     tipePembayaran: 'Tunai',
-    totalBiaya: 0,
+    totalBiaya: '',
   });
 
   const [items, setItems] = useState([
-    { id: 1, resi: '', jumlah: 0, berat: 0, keterangan: '' }
+    { id: 1, resi: '', jumlah: '', berat: '', keterangan: '' }
   ]);
 
   const [catatan, setCatatan] = useState('');
 
   const handleAddItem = () => {
-    const newItem = { id: Date.now(), resi: '', jumlah: 0, berat: 0, keterangan: '' };
+    const newItem = { id: Date.now(), resi: '', jumlah: '', berat: '', keterangan: '' };
     setItems([...items, newItem]);
   };
 
@@ -86,36 +116,7 @@ const STT = () => {
     html2pdf().set(opt).from(element).save();
   };
 
-  // Custom styling components to match the specific STT design
-  const SectionHeader = ({ title }) => (
-    <div style={{ background: '#f8fafc', color: 'var(--primary)', padding: '12px 16px', fontWeight: 700, fontSize: '11px', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>
-      {title}
-    </div>
-  );
 
-  const FormRow = ({ label, value, onChange, placeholder, type = 'text' }) => (
-    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
-      <div style={{ width: '100px', fontSize: '12px', color: 'var(--on-surface)' }}>{label}</div>
-      <div style={{ marginRight: '12px', color: 'var(--on-surface-variant)' }}>:</div>
-      <input
-        type={type}
-        style={{
-          flex: 1,
-          border: 'none',
-          borderBottom: '1px solid var(--outline-variant)',
-          borderRadius: 0,
-          padding: '4px 0',
-          background: 'transparent',
-          fontSize: '13px',
-          color: 'var(--on-surface)',
-          outline: 'none'
-        }}
-        placeholder={placeholder}
-        value={value}
-        onChange={onChange}
-      />
-    </div>
-  );
 
   return (
     <div className="animate-slide-up" style={{ paddingBottom: '40px' }}>
@@ -193,7 +194,7 @@ const STT = () => {
               <FormRow label="No. Resi / DO Ref" placeholder="Referensi Eksternal (Opsional)" value={info.referensi} onChange={(e) => setInfo({ ...info, referensi: e.target.value })} />
               <FormRow label="Est. Pengiriman" type="date" value={info.estPengiriman} onChange={(e) => setInfo({ ...info, estPengiriman: e.target.value })} />
               <FormRow label="Tipe Pembayaran" placeholder="Tunai" value={info.tipePembayaran} onChange={(e) => setInfo({ ...info, tipePembayaran: e.target.value })} />
-              <FormRow label="Total Biaya Rp" placeholder="0" type="number" value={info.totalBiaya || ''} onChange={(e) => setInfo({ ...info, totalBiaya: Number(e.target.value) })} />
+              <FormRow label="Total Biaya Rp" placeholder="0" type="number" value={info.totalBiaya} onChange={(e) => setInfo({ ...info, totalBiaya: e.target.value })} />
             </div>
           </div>
         </div>
@@ -231,10 +232,10 @@ const STT = () => {
                       <input type="text" style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent' }} placeholder="Masukkan No. Resi..." value={item.resi} onChange={(e) => updateItem(item.id, 'resi', e.target.value)} />
                     </td>
                     <td style={{ padding: '8px 16px', textAlign: 'center' }}>
-                      <input type="number" style={{ width: '60px', textAlign: 'center', border: 'none', outline: 'none', background: 'transparent' }} placeholder="0" value={item.jumlah || ''} onChange={(e) => updateItem(item.id, 'jumlah', e.target.value)} />
+                      <input type="number" style={{ width: '60px', textAlign: 'center', border: 'none', outline: 'none', background: 'transparent' }} placeholder="0" value={item.jumlah} onChange={(e) => updateItem(item.id, 'jumlah', e.target.value)} />
                     </td>
                     <td style={{ padding: '8px 16px', textAlign: 'center' }}>
-                      <input type="number" style={{ width: '60px', textAlign: 'center', border: 'none', outline: 'none', background: 'transparent' }} placeholder="0" value={item.berat || ''} onChange={(e) => updateItem(item.id, 'berat', e.target.value)} />
+                      <input type="number" style={{ width: '60px', textAlign: 'center', border: 'none', outline: 'none', background: 'transparent' }} placeholder="0" value={item.berat} onChange={(e) => updateItem(item.id, 'berat', e.target.value)} />
                     </td>
                     <td style={{ padding: '8px 16px' }}>
                       <input type="text" style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent' }} placeholder="Baik/Rusak" value={item.keterangan} onChange={(e) => updateItem(item.id, 'keterangan', e.target.value)} />

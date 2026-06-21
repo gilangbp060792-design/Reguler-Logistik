@@ -9,6 +9,95 @@ const generateResi = () => {
   return result;
 };
 
+const AddressForm = ({ data, setData, title, number, nameLabel }) => (
+  <div className="card" style={{ padding: 0, overflow: 'hidden', background: 'var(--surface)' }}>
+    <div style={{ background: 'var(--primary)', color: 'white', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'white', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>{number}</div>
+      <span className="font-label-md" style={{ letterSpacing: '0.05em', fontSize: '13px' }}>{title}</span>
+    </div>
+    <div style={{ padding: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div className="form-group mb-4">
+          <label className="form-label block font-label-md text-on-surface-variant mb-2">{nameLabel || 'PENGIRIM / PIC'}</label>
+          <input className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} placeholder="" />
+        </div>
+        <div className="form-group mb-4">
+          <label className="form-label block font-label-md text-on-surface-variant mb-2">TELEPON</label>
+          <input className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.phone} onChange={(e) => setData({ ...data, phone: e.target.value })} placeholder="" />
+        </div>
+      </div>
+      <div className="form-group mb-4">
+        <label className="form-label block font-label-md text-on-surface-variant mb-2">PERUSAHAAN (OPSIONAL)</label>
+        <input className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.company} onChange={(e) => setData({ ...data, company: e.target.value })} placeholder="" />
+      </div>
+      
+      <div className="form-group mb-4" style={{ background: 'var(--surface-container-low)', padding: '16px', borderRadius: '12px', border: '1px solid var(--outline-variant)' }}>
+        <label className="form-label block font-label-md" style={{ color: 'var(--primary)', marginBottom: '12px' }}>CARI KECAMATAN / KELURAHAN (AUTO FILL)</label>
+        <RegionPicker 
+          onSelect={(region) => {
+            setData({
+              ...data,
+              provinsi: region.provinsi,
+              kota: region.kota,
+              kecamatan: region.kecamatan,
+              kodePos: region.kodePos
+            });
+          }}
+        />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div className="form-group mb-4">
+          <label className="form-label block font-label-md text-on-surface-variant mb-2">PROVINSI</label>
+          <input className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.provinsi} onChange={(e) => setData({ ...data, provinsi: e.target.value })} placeholder="" />
+        </div>
+        <div className="form-group mb-4">
+          <label className="form-label block font-label-md text-on-surface-variant mb-2">KOTA</label>
+          <input className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.kota} onChange={(e) => setData({ ...data, kota: e.target.value })} placeholder="" />
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div className="form-group mb-4">
+          <label className="form-label block font-label-md text-on-surface-variant mb-2">KECAMATAN</label>
+          <input className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.kecamatan} onChange={(e) => setData({ ...data, kecamatan: e.target.value })} placeholder="" />
+        </div>
+        <div className="form-group mb-4">
+          <label className="form-label block font-label-md text-on-surface-variant mb-2">KODE POS</label>
+          <input className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.kodePos} onChange={(e) => setData({ ...data, kodePos: e.target.value })} placeholder="" />
+        </div>
+      </div>
+      <div className="form-group" style={{ marginBottom: 0 }}>
+        <label className="form-label block font-label-md text-on-surface-variant mb-2">ALAMAT LENGKAP</label>
+        <textarea className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.alamat} onChange={(e) => setData({ ...data, alamat: e.target.value })} rows="3" style={{ resize: 'vertical' }}></textarea>
+      </div>
+    </div>
+  </div>
+);
+
+const LayananRow = ({ label, checked, fee, onToggle, onFeeChange }) => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--outline-variant)' }}>
+    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+      <input type="checkbox" checked={checked} onChange={onToggle} style={{ width: 16, height: 16, accentColor: 'var(--primary)', appearance: 'auto' }} />
+      <span className="font-body-md text-on-surface">{label}</span>
+    </label>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <span className="font-body-md" style={{ color: 'var(--on-surface-variant)' }}>Rp</span>
+      <input
+        type="number"
+        className="form-control px-2 py-1 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary outline-none"
+        style={{ width: '100px', textAlign: 'right', fontSize: '13px' }}
+        value={fee}
+        onChange={(e) => {
+          const val = e.target.value;
+          onFeeChange(val);
+          if (Number(val) > 0 && !checked) onToggle();
+          else if ((!val || Number(val) === 0) && checked) onToggle();
+        }}
+      />
+    </div>
+  </div>
+);
+
 const CustomerOrderBaru = () => {
   const { addShipment, settings } = useContext(AppContext);
 
@@ -73,91 +162,6 @@ const CustomerOrderBaru = () => {
     setSaved(true);
     setTimeout(() => setSaved(false), 4000);
   };
-
-  const AddressForm = ({ data, setData, title, number, nameLabel }) => (
-    <div className="card" style={{ padding: 0, overflow: 'hidden', background: 'var(--surface)' }}>
-      <div style={{ background: 'var(--primary)', color: 'white', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'white', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>{number}</div>
-        <span className="font-label-md" style={{ letterSpacing: '0.05em', fontSize: '13px' }}>{title}</span>
-      </div>
-      <div style={{ padding: '20px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <div className="form-group mb-4">
-            <label className="form-label block font-label-md text-on-surface-variant mb-2">{nameLabel || 'PENGIRIM / PIC'}</label>
-            <input className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} placeholder="" />
-          </div>
-          <div className="form-group mb-4">
-            <label className="form-label block font-label-md text-on-surface-variant mb-2">TELEPON</label>
-            <input className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.phone} onChange={(e) => setData({ ...data, phone: e.target.value })} placeholder="" />
-          </div>
-        </div>
-        <div className="form-group mb-4">
-          <label className="form-label block font-label-md text-on-surface-variant mb-2">PERUSAHAAN (OPSIONAL)</label>
-          <input className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.company} onChange={(e) => setData({ ...data, company: e.target.value })} placeholder="" />
-        </div>
-        
-        <div className="form-group mb-4" style={{ background: 'var(--surface-container-low)', padding: '16px', borderRadius: '12px', border: '1px solid var(--outline-variant)' }}>
-          <label className="form-label block font-label-md" style={{ color: 'var(--primary)', marginBottom: '12px' }}>CARI KECAMATAN / KELURAHAN (AUTO FILL)</label>
-          <RegionPicker 
-            onSelect={(region) => {
-              setData({
-                ...data,
-                provinsi: region.provinsi,
-                kota: region.kota,
-                kecamatan: region.kecamatan,
-                kodePos: region.kodePos
-              });
-            }}
-          />
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <div className="form-group mb-4">
-            <label className="form-label block font-label-md text-on-surface-variant mb-2">PROVINSI</label>
-            <input className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.provinsi} onChange={(e) => setData({ ...data, provinsi: e.target.value })} placeholder="" />
-          </div>
-          <div className="form-group mb-4">
-            <label className="form-label block font-label-md text-on-surface-variant mb-2">KOTA</label>
-            <input className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.kota} onChange={(e) => setData({ ...data, kota: e.target.value })} placeholder="" />
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-          <div className="form-group mb-4">
-            <label className="form-label block font-label-md text-on-surface-variant mb-2">KECAMATAN</label>
-            <input className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.kecamatan} onChange={(e) => setData({ ...data, kecamatan: e.target.value })} placeholder="" />
-          </div>
-          <div className="form-group mb-4">
-            <label className="form-label block font-label-md text-on-surface-variant mb-2">KODE POS</label>
-            <input className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.kodePos} onChange={(e) => setData({ ...data, kodePos: e.target.value })} placeholder="" />
-          </div>
-        </div>
-        <div className="form-group" style={{ marginBottom: 0 }}>
-          <label className="form-label block font-label-md text-on-surface-variant mb-2">ALAMAT LENGKAP</label>
-          <textarea className="form-control w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={data.alamat} onChange={(e) => setData({ ...data, alamat: e.target.value })} rows="3" style={{ resize: 'vertical' }}></textarea>
-        </div>
-      </div>
-    </div>
-  );
-
-  const LayananRow = ({ label, checked, fee, onToggle, onFeeChange }) => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--outline-variant)' }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-        <input type="checkbox" checked={checked} onChange={onToggle} style={{ width: 16, height: 16, accentColor: 'var(--primary)' }} />
-        <span className="font-body-md text-on-surface">{label}</span>
-      </label>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <span className="font-body-md" style={{ color: 'var(--on-surface-variant)' }}>Rp</span>
-        <input
-          type="number"
-          className="form-control px-2 py-1 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary outline-none"
-          style={{ width: '100px', textAlign: 'right', fontSize: '13px' }}
-          value={fee}
-          onChange={(e) => onFeeChange(Number(e.target.value))}
-          disabled={!checked}
-        />
-      </div>
-    </div>
-  );
 
   return (
     <div className="animate-slide-up w-full max-w-[1200px]">
@@ -252,16 +256,16 @@ const CustomerOrderBaru = () => {
             <div style={{ padding: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <span className="font-body-md text-on-surface">Jumlah Paket:</span>
-                <input type="number" className="form-control px-3 py-1 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary outline-none" style={{ width: '100px', textAlign: 'right' }} value={kalkulasi.jumlahPaket} onChange={(e) => setKalkulasi({ ...kalkulasi, jumlahPaket: Number(e.target.value) })} min="0" />
+                <input type="number" className="form-control px-3 py-1 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary outline-none" style={{ width: '100px', textAlign: 'right' }} value={kalkulasi.jumlahPaket} onChange={(e) => setKalkulasi({ ...kalkulasi, jumlahPaket: e.target.value })} min="0" />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <span className="font-body-md text-on-surface">Berat (Kg):</span>
-                <input type="number" step="0.1" className="form-control px-3 py-1 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary outline-none" style={{ width: '100px', textAlign: 'right' }} value={kalkulasi.berat} onChange={(e) => setKalkulasi({ ...kalkulasi, berat: Number(e.target.value) })} min="0" />
+                <input type="number" step="0.1" className="form-control px-3 py-1 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary outline-none" style={{ width: '100px', textAlign: 'right' }} value={kalkulasi.berat} onChange={(e) => setKalkulasi({ ...kalkulasi, berat: e.target.value })} min="0" />
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid var(--outline-variant)' }}>
                 <span className="font-body-md text-on-surface">Ongkir Dasar:</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <input type="number" className="form-control px-3 py-1 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary outline-none" style={{ width: '120px', textAlign: 'right' }} value={kalkulasi.ongkirDasar} onChange={(e) => setKalkulasi({ ...kalkulasi, ongkirDasar: Number(e.target.value) })} min="0" />
+                  <input type="number" className="form-control px-3 py-1 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary outline-none" style={{ width: '120px', textAlign: 'right' }} value={kalkulasi.ongkirDasar} onChange={(e) => setKalkulasi({ ...kalkulasi, ongkirDasar: e.target.value })} min="0" />
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -294,14 +298,14 @@ const CustomerOrderBaru = () => {
               <div style={{ borderTop: '1px solid var(--outline-variant)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={pembayaran.dfod} onChange={() => setPembayaran({ ...pembayaran, dfod: !pembayaran.dfod })} style={{ accentColor: 'var(--primary)' }} />
+                  <input type="checkbox" checked={pembayaran.dfod} onChange={() => setPembayaran({ ...pembayaran, dfod: !pembayaran.dfod })} style={{ accentColor: 'var(--primary)', appearance: 'auto' }} />
                     <span className="font-body-md text-on-surface">DFOD</span>
                   </label>
-                  <input className="form-control px-2 py-1 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary outline-none" style={{ width: '120px', textAlign: 'right' }} placeholder="Rp Biaya DF" value={pembayaran.dfodFee} onChange={(e) => setPembayaran({ ...pembayaran, dfodFee: e.target.value })} disabled={!pembayaran.dfod} />
+                  <input type="number" className="form-control px-2 py-1 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary outline-none" style={{ width: '120px', textAlign: 'right' }} placeholder="Rp Biaya DF" value={pembayaran.dfodFee} onChange={(e) => setPembayaran({ ...pembayaran, dfodFee: e.target.value, dfod: Number(e.target.value) > 0 })} />
                 </div>
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={pembayaran.resiKembali} onChange={() => setPembayaran({ ...pembayaran, resiKembali: !pembayaran.resiKembali })} style={{ accentColor: 'var(--primary)' }} />
+                  <input type="checkbox" checked={pembayaran.resiKembali} onChange={() => setPembayaran({ ...pembayaran, resiKembali: !pembayaran.resiKembali })} style={{ accentColor: 'var(--primary)', appearance: 'auto' }} />
                   <span className="font-body-md text-on-surface">Layanan Resi Kembali</span>
                 </label>
 
