@@ -275,8 +275,8 @@ const CustomerOrderBaru = () => {
 
           {/* Metode Pembayaran */}
           <div className="card" style={{ padding: 0, overflow: 'hidden', background: 'var(--surface)', borderRadius: '12px', border: '1px solid var(--outline-variant)' }}>
-            <div style={{ background: 'var(--secondary-container)', color: 'white', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'white', color: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>6</div>
+            <div style={{ background: 'var(--primary)', color: 'white', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'white', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 700 }}>6</div>
               <span className="font-label-md" style={{ fontSize: '13px' }}>Metode Pembayaran</span>
             </div>
             <div style={{ padding: '20px' }}>
