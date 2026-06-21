@@ -7,11 +7,13 @@ const DriverScanner = () => {
   const { state } = useLocation();
   const shipmentId = state?.shipmentId;
   const { updateShipment } = useContext(AppContext);
+  const [localShipmentId, setLocalShipmentId] = useState(shipmentId || null);
+  const [scanModeStatus, setScanModeStatus] = useState('Pickup');
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [photoCaptured, setPhotoCaptured] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [deliveryStatus, setDeliveryStatus] = useState('Delivered');
+  const [deliveryStatus, setDeliveryStatus] = useState(state?.preSelectedStatus === 'Onhold' ? 'Delayed' : 'Delivered');
   const [holdReason, setHoldReason] = useState('');
 
   // Canvas Signature Logic
@@ -75,14 +77,34 @@ const DriverScanner = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (shipmentId) {
-      updateShipment(shipmentId, {
+    if (localShipmentId) {
+      updateShipment(localShipmentId, {
         status: deliveryStatus === 'Delivered' ? 'Delivered' : 'Onhold',
         holdReason: deliveryStatus === 'Delivered' ? '' : holdReason,
         holdPhoto: photoCaptured ? 'captured.jpg' : null
       });
     }
     setShowSuccess(true);
+  };
+
+  const handleScanSubmit = (e) => {
+    e.preventDefault();
+    const barcode = e.target.barcode.value.trim();
+    if (!barcode) return;
+
+    if (scanModeStatus === 'Pickup' || scanModeStatus === 'Inbound' || scanModeStatus === 'Outbound') {
+       let targetStatus = 'Picked Up';
+       if(scanModeStatus === 'Inbound') targetStatus = 'Inbound';
+       if(scanModeStatus === 'Outbound') targetStatus = 'In-Transit';
+       
+       updateShipment(barcode, { status: targetStatus });
+       alert(`Resi ${barcode} diperbarui menjadi ${targetStatus}`);
+       e.target.reset();
+    } else {
+       // Proceed to form for Onhold / Delivered
+       setLocalShipmentId(barcode);
+       setDeliveryStatus(scanModeStatus === 'Onhold' ? 'Delayed' : 'Delivered');
+    }
   };
 
   const handleCameraClick = () => {
@@ -115,46 +137,71 @@ const DriverScanner = () => {
       {/* Main Form Content */}
       <main className="flex-1 bg-surface-container-lowest relative pb-24 px-container-margin pt-6 overflow-y-auto">
         
-        {/* Shipment Info Banner */}
-        {shipmentId ? (
-          <div className="bg-primary-container text-on-primary-container px-4 py-3 mb-6 rounded-xl flex items-center justify-between shadow-sm border border-primary/20">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px]">package_2</span>
-              <span className="font-label-md text-label-md font-bold tracking-wider">RESI: {shipmentId}</span>
+        {!localShipmentId ? (
+          <div className="animate-fade-in">
+            <h2 className="font-headline-md text-headline-md mb-4">Pilih Status Sebelum Scan</h2>
+            
+            <div className="flex flex-wrap gap-2 mb-8">
+              {['Pickup', 'Inbound', 'Outbound', 'Onhold', 'Delivered POD'].map(status => (
+                <button
+                  key={status}
+                  onClick={() => setScanModeStatus(status)}
+                  className={`px-4 py-2 rounded-full font-label-md text-label-md transition-all ${scanModeStatus === status ? 'bg-primary text-on-primary shadow-md' : 'bg-surface-container text-on-surface-variant border border-outline-variant'}`}
+                >
+                  {status}
+                </button>
+              ))}
             </div>
-            <span className="bg-primary text-on-primary px-2 py-0.5 rounded font-label-md text-[10px]">AKTIF</span>
+
+            <div className="bg-white p-6 rounded-xl border border-outline-variant shadow-sm text-center">
+              <span className="material-symbols-outlined text-[64px] text-primary mb-4">qr_code_scanner</span>
+              <p className="font-body-md text-on-surface-variant mb-6">Arahkan kamera ke barcode resi atau masukkan nomor resi secara manual untuk update status ke <strong>{scanModeStatus}</strong>.</p>
+              
+              <form onSubmit={handleScanSubmit} className="flex gap-2">
+                <input 
+                  type="text" 
+                  name="barcode"
+                  placeholder="Masukkan Nomor Resi..." 
+                  className="flex-1 px-4 py-3 bg-surface border border-outline-variant rounded-lg focus:border-primary outline-none"
+                  autoFocus
+                />
+                <button type="submit" className="bg-primary text-white px-6 py-3 rounded-lg font-label-md hover:bg-primary-container hover:text-primary transition-colors">
+                  SCAN
+                </button>
+              </form>
+            </div>
           </div>
         ) : (
-          <div className="bg-surface-container text-on-surface-variant px-4 py-3 mb-6 rounded-xl flex items-center justify-between shadow-sm border border-outline-variant">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px]">qr_code_scanner</span>
-              <span className="font-label-md text-label-md font-bold tracking-wider">TIDAK ADA RESI TERPILIH</span>
+          <div className="animate-slide-up">
+            {/* Shipment Info Banner */}
+            <div className="bg-primary-container text-on-primary-container px-4 py-3 mb-6 rounded-xl flex items-center justify-between shadow-sm border border-primary/20">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px]">package_2</span>
+                <span className="font-label-md text-label-md font-bold tracking-wider">RESI: {localShipmentId}</span>
+              </div>
+              <button 
+                onClick={() => setLocalShipmentId(null)}
+                className="bg-primary text-on-primary px-2 py-1 rounded font-label-md text-[10px] hover:bg-white hover:text-primary transition-colors"
+              >
+                BATAL
+              </button>
             </div>
-          </div>
-        )}
 
-        {/* Shipment Brief */}
-        <section className="mb-8 p-4 bg-surface-container-low rounded-xl border border-outline-variant">
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">ID Pengiriman</span>
-              <p className="font-mono-data text-mono-data text-primary">REG-88294-TX</p>
-            </div>
-            <div className="bg-secondary-container px-3 py-1 rounded-full">
-              <span className="font-label-md text-label-md text-on-secondary-container">DI PERJALANAN</span>
-            </div>
-          </div>
-          <div className="mt-4 flex gap-3">
-            <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>location_on</span>
-            <div>
-              <p className="font-body-md font-bold text-on-surface">Modern Retail Hub</p>
-              <p className="font-body-md text-on-surface-variant">102 Industrial Way, Austin, TX</p>
-            </div>
-          </div>
-        </section>
+            {/* Shipment Brief */}
+            <section className="mb-8 p-4 bg-surface-container-low rounded-xl border border-outline-variant">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <span className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">ID Pengiriman</span>
+                  <p className="font-mono-data text-mono-data text-primary">{localShipmentId}</p>
+                </div>
+                <div className="bg-secondary-container px-3 py-1 rounded-full">
+                  <span className="font-label-md text-label-md text-on-secondary-container">DI PERJALANAN</span>
+                </div>
+              </div>
+            </section>
 
-        {/* POD Form */}
-        <form className="space-y-8" onSubmit={handleSubmit}>
+            {/* POD Form */}
+            <form className="space-y-8" onSubmit={handleSubmit}>
           {/* Status Toggle */}
           <div className="space-y-2">
             <label className="font-label-md text-label-md text-on-surface-variant flex items-center gap-2">
@@ -281,7 +328,9 @@ const DriverScanner = () => {
                 : 'Dengan melaporkan On Hold, paket akan ditandai tertunda dan perlu diproses ulang.'}
             </p>
           </div>
-        </form>
+            </form>
+          </div>
+        )}
       </main>
 
       {/* Bottom Navigation Shell (Filter: Active on Tasks) */}
