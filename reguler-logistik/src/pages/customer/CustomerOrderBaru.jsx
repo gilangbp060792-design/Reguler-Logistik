@@ -87,12 +87,7 @@ const LayananRow = ({ label, checked, fee, onToggle, onFeeChange }) => (
         className="form-control px-2 py-1 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary outline-none"
         style={{ width: '100px', textAlign: 'right', fontSize: '13px' }}
         value={fee}
-        onChange={(e) => {
-          const val = e.target.value;
-          onFeeChange(val);
-          if (Number(val) > 0 && !checked) onToggle();
-          else if ((!val || Number(val) === 0) && checked) onToggle();
-        }}
+        onChange={(e) => onFeeChange(e.target.value)}
       />
     </div>
   </div>
@@ -139,7 +134,7 @@ const CustomerOrderBaru = () => {
     + (layanan.asuransi ? Number(layanan.asuransiFee) : 0)
     + (layanan.biayaCOD ? Number(layanan.biayaCODFee) : 0);
 
-  const totalBiaya = Number(kalkulasi.ongkirDasar) + totalLayanan + (pembayaran.dfod ? Number(pembayaran.dfodFee || 0) : 0);
+  const totalBiaya = (pembayaran.dfod ? 0 : Number(kalkulasi.ongkirDasar)) + totalLayanan + (pembayaran.dfod ? Number(pembayaran.dfodFee || 0) : 0);
 
   const handleSave = () => {
     if (!pengirim.name || !penerima.name || !barang.nama) {
@@ -233,13 +228,13 @@ const CustomerOrderBaru = () => {
               <span className="font-label-md" style={{ fontSize: '13px' }}>Layanan Tambahan</span>
             </div>
             <div style={{ padding: '16px 20px' }}>
-              <LayananRow label="Door to Door" checked={layanan.doorToDoor} fee={layanan.doorToDoorFee} onToggle={() => setLayanan({ ...layanan, doorToDoor: !layanan.doorToDoor })} onFeeChange={(v) => setLayanan({ ...layanan, doorToDoorFee: v })} />
-              <LayananRow label="Cek Paket" checked={layanan.cekPaket} fee={layanan.cekPaketFee} onToggle={() => setLayanan({ ...layanan, cekPaket: !layanan.cekPaket })} onFeeChange={(v) => setLayanan({ ...layanan, cekPaketFee: v })} />
-              <LayananRow label="Kemasan" checked={layanan.kemasan} fee={layanan.kemasanFee} onToggle={() => setLayanan({ ...layanan, kemasan: !layanan.kemasan })} onFeeChange={(v) => setLayanan({ ...layanan, kemasanFee: v })} />
-              <LayananRow label="Lainnya" checked={layanan.lainnya} fee={layanan.lainnyaFee} onToggle={() => setLayanan({ ...layanan, lainnya: !layanan.lainnya })} onFeeChange={(v) => setLayanan({ ...layanan, lainnyaFee: v })} />
-              <LayananRow label="Asuransi" checked={layanan.asuransi} fee={layanan.asuransiFee} onToggle={() => setLayanan({ ...layanan, asuransi: !layanan.asuransi })} onFeeChange={(v) => setLayanan({ ...layanan, asuransiFee: v })} />
+              <LayananRow label="Door to Door" checked={layanan.doorToDoor} fee={layanan.doorToDoorFee} onToggle={() => setLayanan(prev => ({ ...prev, doorToDoor: !prev.doorToDoor }))} onFeeChange={(v) => setLayanan(prev => ({ ...prev, doorToDoorFee: v, doorToDoor: Number(v) > 0 ? true : false }))} />
+              <LayananRow label="Cek Paket" checked={layanan.cekPaket} fee={layanan.cekPaketFee} onToggle={() => setLayanan(prev => ({ ...prev, cekPaket: !prev.cekPaket }))} onFeeChange={(v) => setLayanan(prev => ({ ...prev, cekPaketFee: v, cekPaket: Number(v) > 0 ? true : false }))} />
+              <LayananRow label="Kemasan" checked={layanan.kemasan} fee={layanan.kemasanFee} onToggle={() => setLayanan(prev => ({ ...prev, kemasan: !prev.kemasan }))} onFeeChange={(v) => setLayanan(prev => ({ ...prev, kemasanFee: v, kemasan: Number(v) > 0 ? true : false }))} />
+              <LayananRow label="Lainnya" checked={layanan.lainnya} fee={layanan.lainnyaFee} onToggle={() => setLayanan(prev => ({ ...prev, lainnya: !prev.lainnya }))} onFeeChange={(v) => setLayanan(prev => ({ ...prev, lainnyaFee: v, lainnya: Number(v) > 0 ? true : false }))} />
+              <LayananRow label="Asuransi" checked={layanan.asuransi} fee={layanan.asuransiFee} onToggle={() => setLayanan(prev => ({ ...prev, asuransi: !prev.asuransi }))} onFeeChange={(v) => setLayanan(prev => ({ ...prev, asuransiFee: v, asuransi: Number(v) > 0 ? true : false }))} />
               <div style={{ borderBottom: 'none' }}>
-                <LayananRow label="Biaya COD" checked={layanan.biayaCOD} fee={layanan.biayaCODFee} onToggle={() => setLayanan({ ...layanan, biayaCOD: !layanan.biayaCOD })} onFeeChange={(v) => setLayanan({ ...layanan, biayaCODFee: v })} />
+                <LayananRow label="Biaya COD" checked={layanan.biayaCOD} fee={layanan.biayaCODFee} onToggle={() => setLayanan(prev => ({ ...prev, biayaCOD: !prev.biayaCOD }))} onFeeChange={(v) => setLayanan(prev => ({ ...prev, biayaCODFee: v, biayaCOD: Number(v) > 0 ? true : false }))} />
               </div>
             </div>
           </div>
@@ -298,14 +293,14 @@ const CustomerOrderBaru = () => {
               <div style={{ borderTop: '1px solid var(--outline-variant)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={pembayaran.dfod} onChange={() => setPembayaran({ ...pembayaran, dfod: !pembayaran.dfod })} style={{ accentColor: 'var(--primary)', appearance: 'auto' }} />
-                    <span className="font-body-md text-on-surface">DFOD</span>
+                  <input type="checkbox" checked={pembayaran.dfod} onChange={() => setPembayaran(prev => ({ ...prev, dfod: !prev.dfod }))} style={{ accentColor: 'var(--primary)', appearance: 'auto' }} />
+                    <span className="font-body-md text-on-surface">DFOD (Ongkir Ditanggung Penerima)</span>
                   </label>
-                  <input type="number" className="form-control px-2 py-1 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary outline-none" style={{ width: '120px', textAlign: 'right' }} placeholder="Rp Biaya DF" value={pembayaran.dfodFee} onChange={(e) => setPembayaran({ ...pembayaran, dfodFee: e.target.value, dfod: Number(e.target.value) > 0 })} />
+                  <input type="number" className="form-control px-2 py-1 bg-surface-container-lowest border border-outline-variant rounded focus:border-primary outline-none" style={{ width: '120px', textAlign: 'right' }} placeholder="Rp Biaya Admin DF" value={pembayaran.dfodFee} onChange={(e) => setPembayaran(prev => ({ ...prev, dfodFee: e.target.value, dfod: Number(e.target.value) > 0 ? true : false }))} />
                 </div>
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={pembayaran.resiKembali} onChange={() => setPembayaran({ ...pembayaran, resiKembali: !pembayaran.resiKembali })} style={{ accentColor: 'var(--primary)', appearance: 'auto' }} />
+                  <input type="checkbox" checked={pembayaran.resiKembali} onChange={() => setPembayaran(prev => ({ ...prev, resiKembali: !prev.resiKembali }))} style={{ accentColor: 'var(--primary)', appearance: 'auto' }} />
                   <span className="font-body-md text-on-surface">Layanan Resi Kembali</span>
                 </label>
 
